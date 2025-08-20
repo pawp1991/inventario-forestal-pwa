@@ -27,6 +27,9 @@
     
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <!-- Google API -->
+    <script src="https://apis.google.com/js/api.js"></script>
 </head>
 <body>
     <!-- PWA Install Button -->
@@ -35,6 +38,12 @@
         Instalar App
     </button>
 
+    <!-- Google Drive Status -->
+    <div id="driveStatus" class="drive-status hidden">
+        <i data-lucide="cloud-off"></i>
+        <span id="driveStatusText">Sin conexión a Drive</span>
+    </div>
+
     <div id="app" class="min-h-screen bg-green-50 p-2 sm:p-4">
         <!-- Header -->
         <div class="max-w-4xl mx-auto">
@@ -42,9 +51,13 @@
                 <div class="flex items-center gap-3">
                     <i data-lucide="tree-pine" class="w-6 h-6 sm:w-8 sm:h-8"></i>
                     <h1 class="text-xl sm:text-2xl font-bold">Inventario Forestal</h1>
-                    <span class="bg-green-600 text-xs px-2 py-1 rounded">PWA</span>
+                    <span class="bg-green-600 text-xs px-2 py-1 rounded">v2.0</span>
+                    <button id="driveConnectBtn" class="bg-blue-600 text-xs px-2 py-1 rounded hover:bg-blue-700 ml-auto">
+                        <i data-lucide="cloud"></i>
+                        Drive
+                    </button>
                 </div>
-                <p class="text-green-100 mt-2 text-sm sm:text-base">Sistema de captura de mediciones DAP</p>
+                <p class="text-green-100 mt-2 text-sm sm:text-base">Sistema de captura de mediciones DAP con respaldo automático</p>
             </div>
 
             <!-- Formulario Principal -->
@@ -55,9 +68,14 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Lote</label>
                         <input type="text" id="loteInput" class="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500" placeholder="Ej: Lote A">
                     </div>
-                    <div>
+                    <div class="relative">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Número de Parcela</label>
-                        <input type="text" id="parcelaInput" class="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500" placeholder="Ej: 1">
+                        <div class="flex gap-2">
+                            <input type="text" id="parcelaInput" class="flex-1 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500" placeholder="Ej: 1">
+                            <button id="editParcelaBtn" class="bg-yellow-600 text-white px-3 py-2 rounded-md hover:bg-yellow-700 hidden" title="Editar número de parcela">
+                                <i data-lucide="edit-3"></i>
+                            </button>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Fecha</label>
@@ -113,6 +131,27 @@
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Datos Guardados</h3>
                 <div id="datosGuardados">
                     <p class="text-gray-500 italic">No hay datos guardados aún</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de edición de parcela -->
+    <div id="editParcelaModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 class="text-lg font-semibold mb-4">Editar Parcela Guardada</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nuevo número de parcela:</label>
+                    <input type="text" id="nuevoNumeroParcelaInput" class="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                </div>
+                <div class="flex gap-3">
+                    <button id="confirmarEditParcelaBtn" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                        Confirmar
+                    </button>
+                    <button id="cancelarEditParcelaBtn" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">
+                        Cancelar
+                    </button>
                 </div>
             </div>
         </div>
