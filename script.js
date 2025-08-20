@@ -11,7 +11,7 @@ let gapi = null;
 let driveConnected = false;
 const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-const CLIENT_ID = 'TU_CLIENT_ID.apps.googleusercontent.com'; // Necesitarás configurar esto
+const CLIENT_ID = '1051212030884-6vpvuda1i37cs5btq1kav44r9dirket0.apps.googleusercontent.com'; // Necesitarás configurar esto
 
 // DOM Elements
 const elements = {
