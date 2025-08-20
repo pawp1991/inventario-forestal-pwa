@@ -1,28 +1,30 @@
 {
-    "name": "Inventario Forestal",
-    "short_name": "ForestInv",
-    "description": "Sistema de captura de mediciones DAP para inventarios forestales",
-    "start_url": "./index.html",
-    "display": "standalone",
-    "background_color": "#f0fdf4",
-    "theme_color": "#166534",
-    "orientation": "portrait-primary",
-    "scope": "./",
-    "icons": [
-        {
-            "src": "icons/icon-192.png",
-            "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "icons/icon-512.png", 
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "any maskable"
-        }
-    ],
-    "categories": ["productivity", "utilities"],
-    "screenshots": [],
-    "prefer_related_applications": false
+  "name": "Inventario Forestal",
+  "short_name": "ForestInv",
+  "description": "Sistema de captura de mediciones DAP para inventarios forestales",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f0fdf4",
+  "theme_color": "#166534",
+  "orientation": "portrait-primary",
+  "scope": "./",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "productivity",
+    "utilities"
+  ],
+  "prefer_related_applications": false
 }
