@@ -1,7 +1,7 @@
 {
-    "name": "Inventario Forestal",
+    "name": "Inventario Forestal v3.1",
     "short_name": "ForestInv",
-    "description": "Sistema de captura de mediciones DAP para inventarios forestales",
+    "description": "Sistema de captura de mediciones DAP con exportación masiva y cálculos forestales avanzados",
     "start_url": "./index.html",
     "display": "standalone",
     "background_color": "#f0fdf4",

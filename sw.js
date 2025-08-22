@@ -1,4 +1,4 @@
-const CACHE_NAME = 'inventario-forestal-v2.0.0';
+const CACHE_NAME = 'inventario-forestal-v3.1.0';
 const urlsToCache = [
     './',
     './index.html',
@@ -8,17 +8,16 @@ const urlsToCache = [
     './icons/icon-192.png',
     './icons/icon-512.png',
     'https://cdn.tailwindcss.com',
-    'https://unpkg.com/lucide@latest/dist/umd/lucide.js',
-    'https://apis.google.com/js/api.js'
+    'https://unpkg.com/lucide@latest/dist/umd/lucide.js'
 ];
 
-// Resto del código del service worker igual...
+// Instalación del Service Worker
 self.addEventListener('install', (event) => {
-    console.log('Service Worker: Instalando v2.0...');
+    console.log('Service Worker: Instalando v3.1...');
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => {
-                console.log('Service Worker: Archivos en caché v2.0');
+                console.log('Service Worker: Archivos en caché v3.1');
                 return cache.addAll(urlsToCache);
             })
             .catch((error) => {
@@ -27,8 +26,9 @@ self.addEventListener('install', (event) => {
     );
 });
 
+// Activación del Service Worker
 self.addEventListener('activate', (event) => {
-    console.log('Service Worker: Activando v2.0...');
+    console.log('Service Worker: Activando v3.1...');
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
@@ -43,6 +43,7 @@ self.addEventListener('activate', (event) => {
     );
 });
 
+// Interceptar peticiones de red
 self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.match(event.request)

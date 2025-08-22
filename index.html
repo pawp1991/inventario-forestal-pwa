@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Inventario Forestal</title>
+    <title>Inventario Forestal v3.0</title>
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#166534">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Inventario Forestal">
-    <meta name="description" content="Sistema de captura de mediciones DAP para inventarios forestales">
+    <meta name="description" content="Sistema de captura de mediciones DAP para inventarios forestales con cálculos avanzados">
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
@@ -27,9 +27,6 @@
     
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    
-    <!-- Google API -->
-    <script src="https://apis.google.com/js/api.js"></script>
 </head>
 <body>
     <!-- PWA Install Button -->
@@ -38,10 +35,10 @@
         Instalar App
     </button>
 
-    <!-- Google Drive Status -->
-    <div id="driveStatus" class="drive-status hidden">
-        <i data-lucide="cloud-off"></i>
-        <span id="driveStatusText">Sin conexión a Drive</span>
+    <!-- Backup Status -->
+    <div id="backupStatus" class="backup-status">
+        <i data-lucide="hard-drive"></i>
+        <span id="backupStatusText">Respaldo local activo</span>
     </div>
 
     <div id="app" class="min-h-screen bg-green-50 p-2 sm:p-4">
@@ -51,13 +48,25 @@
                 <div class="flex items-center gap-3">
                     <i data-lucide="tree-pine" class="w-6 h-6 sm:w-8 sm:h-8"></i>
                     <h1 class="text-xl sm:text-2xl font-bold">Inventario Forestal</h1>
-                    <span class="bg-green-600 text-xs px-2 py-1 rounded">v2.0</span>
-                    <button id="driveConnectBtn" class="bg-blue-600 text-xs px-2 py-1 rounded hover:bg-blue-700 ml-auto">
-                        <i data-lucide="cloud"></i>
-                        Drive
-                    </button>
+                    <span class="bg-green-600 text-xs px-2 py-1 rounded">v3.1</span>
+                    <div class="ml-auto flex gap-2">
+                        <button id="exportAllBtn" class="bg-blue-600 text-sm px-3 py-2 rounded-md hover:bg-blue-700 flex items-center gap-1" title="Exportar TODOS los datos en un solo CSV">
+                            <i data-lucide="download"></i>
+                            <span class="hidden sm:inline">Exportar Todo</span>
+                            <span class="sm:hidden">CSV</span>
+                        </button>
+                        <button id="deleteAllBtn" class="bg-red-600 text-xs px-2 py-1 rounded hover:bg-red-700" title="Eliminar todos los datos">
+                            <i data-lucide="trash-2"></i>
+                            Limpiar
+                        </button>
+                    </div>
                 </div>
-                <p class="text-green-100 mt-2 text-sm sm:text-base">Sistema de captura de mediciones DAP con respaldo automático</p>
+                <p class="text-green-100 mt-2 text-sm sm:text-base">Sistema con respaldo automático local y cálculos forestales avanzados</p>
+                <div id="statsGlobales" class="mt-3 flex flex-wrap gap-4 text-xs text-green-200">
+                    <span id="totalLotes">0 lotes</span>
+                    <span id="totalParcelas">0 parcelas</span>
+                    <span id="totalArboles">0 árboles</span>
+                </div>
             </div>
 
             <!-- Formulario Principal -->
@@ -105,8 +114,9 @@
                     <div id="medicionesList" class="hidden bg-gray-50 p-4 rounded-md mb-4">
                         <h4 id="medicionesTitle" class="font-medium text-gray-700 mb-3"></h4>
                         <div id="medicionesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mb-3"></div>
-                        <div class="bg-green-100 p-2 rounded">
+                        <div class="bg-green-100 p-3 rounded grid grid-cols-1 md:grid-cols-2 gap-2">
                             <p id="promedioDisplay" class="text-sm text-green-800 font-medium"></p>
+                            <p id="densidadDisplay" class="text-sm text-green-800 font-medium"></p>
                         </div>
                     </div>
 
@@ -121,6 +131,58 @@
                         </button>
                         <button id="nuevoLoteBtn" class="bg-purple-600 text-white px-6 py-3 rounded-md hover:bg-purple-700">
                             Nuevo Lote
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección de Exportación Masiva -->
+            <div id="exportSection" class="bg-blue-50 border-x border-blue-200 p-4 sm:p-6 hidden">
+                <h3 class="text-lg font-semibold text-blue-800 mb-4 flex items-center gap-2">
+                    <i data-lucide="database"></i>
+                    Exportación Masiva
+                </h3>
+                <div class="bg-white p-4 rounded-lg border border-blue-200">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div class="space-y-2">
+                            <h4 class="font-medium text-gray-700">Resumen de Datos:</h4>
+                            <div class="grid grid-cols-3 gap-2 text-sm">
+                                <div class="bg-blue-100 p-2 rounded text-center">
+                                    <div class="font-bold text-blue-800" id="exportTotalLotes">0</div>
+                                    <div class="text-blue-600">Lotes</div>
+                                </div>
+                                <div class="bg-green-100 p-2 rounded text-center">
+                                    <div class="font-bold text-green-800" id="exportTotalParcelas">0</div>
+                                    <div class="text-green-600">Parcelas</div>
+                                </div>
+                                <div class="bg-orange-100 p-2 rounded text-center">
+                                    <div class="font-bold text-orange-800" id="exportTotalArboles">0</div>
+                                    <div class="text-orange-600">Árboles</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <h4 class="font-medium text-gray-700">Opciones de Exportación:</h4>
+                            <div class="space-y-2">
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" id="incluirEstadisticas" checked class="rounded">
+                                    <span class="text-sm">Incluir estadísticas por parcela</span>
+                                </label>
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" id="incluirFechaExport" checked class="rounded">
+                                    <span class="text-sm">Incluir fecha de exportación</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button id="exportCompletBtn" class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 flex items-center justify-center gap-2">
+                            <i data-lucide="download"></i>
+                            Exportar Inventario Completo
+                        </button>
+                        <button id="exportEstadisticasBtn" class="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 flex items-center justify-center gap-2">
+                            <i data-lucide="bar-chart-3"></i>
+                            Export Estadísticas
                         </button>
                     </div>
                 </div>
@@ -153,6 +215,22 @@
                         Cancelar
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación de eliminación -->
+    <div id="deleteModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 class="text-lg font-semibold mb-4 text-red-700">Confirmar Eliminación</h3>
+            <p id="deleteMessage" class="mb-4 text-gray-700"></p>
+            <div class="flex gap-3">
+                <button id="confirmarDeleteBtn" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                    Eliminar
+                </button>
+                <button id="cancelarDeleteBtn" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">
+                    Cancelar
+                </button>
             </div>
         </div>
     </div>

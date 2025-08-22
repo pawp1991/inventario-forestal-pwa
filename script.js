@@ -5,13 +5,7 @@ let loteActual = '';
 let parcelaActual = '';
 let deferredPrompt = null;
 let parcelaEditandoKey = null;
-
-// Google Drive API
-let gapi = null;
-let driveConnected = false;
-const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
-const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-const CLIENT_ID = '1051212030884-6vpvuda1i37cs5btq1kav44r9dirket0.apps.googleusercontent.com'; // Necesitarás configurar esto
+let deleteTarget = null;
 
 // DOM Elements
 const elements = {
@@ -29,18 +23,35 @@ const elements = {
     medicionesTitle: document.getElementById('medicionesTitle'),
     medicionesGrid: document.getElementById('medicionesGrid'),
     promedioDisplay: document.getElementById('promedioDisplay'),
+    densidadDisplay: document.getElementById('densidadDisplay'),
     guardarBtn: document.getElementById('guardarBtn'),
     nuevaParcelaBtn: document.getElementById('nuevaParcelaBtn'),
     nuevoLoteBtn: document.getElementById('nuevoLoteBtn'),
     datosGuardados: document.getElementById('datosGuardados'),
     installButton: document.getElementById('installButton'),
-    driveConnectBtn: document.getElementById('driveConnectBtn'),
-    driveStatus: document.getElementById('driveStatus'),
-    driveStatusText: document.getElementById('driveStatusText'),
+    backupStatus: document.getElementById('backupStatus'),
+    backupStatusText: document.getElementById('backupStatusText'),
+    exportAllBtn: document.getElementById('exportAllBtn'),
+    deleteAllBtn: document.getElementById('deleteAllBtn'),
+    exportSection: document.getElementById('exportSection'),
+    exportTotalLotes: document.getElementById('exportTotalLotes'),
+    exportTotalParcelas: document.getElementById('exportTotalParcelas'),
+    exportTotalArboles: document.getElementById('exportTotalArboles'),
+    incluirEstadisticas: document.getElementById('incluirEstadisticas'),
+    incluirFechaExport: document.getElementById('incluirFechaExport'),
+    exportCompletBtn: document.getElementById('exportCompletBtn'),
+    exportEstadisticasBtn: document.getElementById('exportEstadisticasBtn'),
+    totalLotes: document.getElementById('totalLotes'),
+    totalParcelas: document.getElementById('totalParcelas'),
+    totalArboles: document.getElementById('totalArboles'),
     editParcelaModal: document.getElementById('editParcelaModal'),
     nuevoNumeroParcelaInput: document.getElementById('nuevoNumeroParcelaInput'),
     confirmarEditParcelaBtn: document.getElementById('confirmarEditParcelaBtn'),
-    cancelarEditParcelaBtn: document.getElementById('cancelarEditParcelaBtn')
+    cancelarEditParcelaBtn: document.getElementById('cancelarEditParcelaBtn'),
+    deleteModal: document.getElementById('deleteModal'),
+    deleteMessage: document.getElementById('deleteMessage'),
+    confirmarDeleteBtn: document.getElementById('confirmarDeleteBtn'),
+    cancelarDeleteBtn: document.getElementById('cancelarDeleteBtn')
 };
 
 // Inicialización
@@ -49,7 +60,6 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     setupPWA();
     loadData();
-    initializeGoogleDrive();
 });
 
 function initializeApp() {
@@ -72,9 +82,11 @@ function initializeApp() {
         }
     }
     
-    // Mostrar status de Drive
-    elements.driveStatus.classList.remove('hidden');
-    updateDriveStatus('disconnected');
+    // Mostrar status de respaldo
+    updateBackupStatus('active');
+    
+    // Actualizar estadísticas globales
+    actualizarEstadisticasGlobales();
 }
 
 function setupEventListeners() {
@@ -97,8 +109,11 @@ function setupEventListeners() {
     // PWA Install
     elements.installButton.addEventListener('click', instalarPWA);
     
-    // Google Drive
-    elements.driveConnectBtn.addEventListener('click', connectToGoogleDrive);
+    // Exportar y eliminar
+    elements.exportAllBtn.addEventListener('click', mostrarSeccionExportacion);
+    elements.deleteAllBtn.addEventListener('click', () => confirmarEliminacion('all'));
+    elements.exportCompletBtn.addEventListener('click', exportarInventarioCompleto);
+    elements.exportEstadisticasBtn.addEventListener('click', exportarEstadisticas);
     
     // Modal de edición
     elements.confirmarEditParcelaBtn.addEventListener('click', confirmarEdicionParcela);
@@ -106,6 +121,15 @@ function setupEventListeners() {
     elements.editParcelaModal.addEventListener('click', (e) => {
         if (e.target === elements.editParcelaModal) {
             cerrarModalEdicion();
+        }
+    });
+    
+    // Modal de eliminación
+    elements.confirmarDeleteBtn.addEventListener('click', ejecutarEliminacion);
+    elements.cancelarDeleteBtn.addEventListener('click', cerrarModalEliminacion);
+    elements.deleteModal.addEventListener('click', (e) => {
+        if (e.target === elements.deleteModal) {
+            cerrarModalEliminacion();
         }
     });
 }
@@ -132,104 +156,95 @@ function setupPWA() {
     });
 }
 
-// Funciones de Google Drive
-async function initializeGoogleDrive() {
-    try {
-        if (typeof gapi !== 'undefined') {
-            await gapi.load('auth2', initAuth);
-            await gapi.load('client', initClient);
+// Funciones de estadísticas globales
+function calcularEstadisticasGlobales() {
+    let totalLotes = 0;
+    let totalParcelas = 0;
+    let totalArboles = 0;
+    
+    Object.entries(inventario).forEach(([nombreLote, datosLote]) => {
+        totalLotes++;
+        if (datosLote.parcelas) {
+            Object.values(datosLote.parcelas).forEach(parcela => {
+                totalParcelas++;
+                totalArboles += parcela.totalArboles;
+            });
         }
-    } catch (error) {
-        console.log('Google API no disponible, modo offline');
-        updateDriveStatus('offline');
+    });
+    
+    return { totalLotes, totalParcelas, totalArboles };
+}
+
+function actualizarEstadisticasGlobales() {
+    const stats = calcularEstadisticasGlobales();
+    
+    // Actualizar header
+    elements.totalLotes.textContent = `${stats.totalLotes} lotes`;
+    elements.totalParcelas.textContent = `${stats.totalParcelas} parcelas`;
+    elements.totalArboles.textContent = `${stats.totalArboles} árboles`;
+    
+    // Actualizar sección de exportación
+    elements.exportTotalLotes.textContent = stats.totalLotes;
+    elements.exportTotalParcelas.textContent = stats.totalParcelas;
+    elements.exportTotalArboles.textContent = stats.totalArboles;
+    
+    // Mostrar/ocultar sección de exportación
+    if (stats.totalArboles > 0) {
+        elements.exportSection.classList.remove('hidden');
+    } else {
+        elements.exportSection.classList.add('hidden');
     }
 }
 
-async function initAuth() {
-    try {
-        await gapi.auth2.init({
-            client_id: CLIENT_ID
-        });
-    } catch (error) {
-        console.error('Error inicializando auth:', error);
+function mostrarSeccionExportacion() {
+    if (Object.keys(inventario).length === 0) {
+        alert('No hay datos para exportar. Primero debe capturar algunas mediciones.');
+        return;
     }
+    
+    // Scroll a la sección de exportación
+    elements.exportSection.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'center'
+    });
+    
+    // Efecto visual
+    elements.exportSection.style.animation = 'none';
+    setTimeout(() => {
+        elements.exportSection.style.animation = 'pulse 1s ease-in-out 2';
+    }, 100);
 }
 
-async function initClient() {
-    try {
-        await gapi.client.init({
-            discoveryDocs: [DISCOVERY_DOC]
-        });
-    } catch (error) {
-        console.error('Error inicializando client:', error);
-    }
-}
-
-async function connectToGoogleDrive() {
-    try {
-        updateDriveStatus('connecting');
-        
-        if (!gapi || !gapi.auth2) {
-            throw new Error('Google API no disponible');
-        }
-        
-        const authInstance = gapi.auth2.getAuthInstance();
-        const user = await authInstance.signIn({
-            scope: SCOPES
-        });
-        
-        if (user.isSignedIn()) {
-            driveConnected = true;
-            updateDriveStatus('connected');
-            
-            // Realizar respaldo automático si hay datos
-            if (Object.keys(inventario).length > 0) {
-                await backupToGoogleDrive();
-            }
-            
-            alert('✅ Conectado a Google Drive. Los datos se respaldarán automáticamente.');
-        }
-    } catch (error) {
-        console.error('Error conectando a Drive:', error);
-        updateDriveStatus('error');
-        alert('❌ Error al conectar con Google Drive. Verifique su conexión a internet.');
-    }
-}
-
-function updateDriveStatus(status) {
-    const statusElement = elements.driveStatus;
-    const textElement = elements.driveStatusText;
+// Funciones de exportación mejorada
+function updateBackupStatus(status) {
+    const statusElement = elements.backupStatus;
+    const textElement = elements.backupStatusText;
     const iconElement = statusElement.querySelector('i');
     
     // Remover clases anteriores
-    statusElement.classList.remove('connected', 'syncing');
+    statusElement.classList.remove('saving', 'error');
     
     switch (status) {
-        case 'connected':
-            statusElement.classList.add('connected');
-            textElement.textContent = 'Drive conectado';
-            iconElement.setAttribute('data-lucide', 'cloud-check');
+        case 'active':
+            textElement.textContent = 'Respaldo local activo';
+            iconElement.setAttribute('data-lucide', 'hard-drive');
             break;
-        case 'syncing':
-            statusElement.classList.add('syncing');
-            textElement.textContent = 'Sincronizando...';
-            iconElement.setAttribute('data-lucide', 'cloud-upload');
+        case 'saving':
+            statusElement.classList.add('saving');
+            textElement.textContent = 'Guardando...';
+            iconElement.setAttribute('data-lucide', 'loader-2');
             break;
-        case 'connecting':
-            textElement.textContent = 'Conectando...';
-            iconElement.setAttribute('data-lucide', 'cloud');
+        case 'saved':
+            textElement.textContent = 'Datos guardados';
+            iconElement.setAttribute('data-lucide', 'check-circle');
+            setTimeout(() => updateBackupStatus('active'), 2000);
             break;
         case 'error':
-            textElement.textContent = 'Error de conexión';
-            iconElement.setAttribute('data-lucide', 'cloud-off');
+            statusElement.classList.add('error');
+            textElement.textContent = 'Error al guardar';
+            iconElement.setAttribute('data-lucide', 'alert-circle');
+            setTimeout(() => updateBackupStatus('active'), 3000);
             break;
-        case 'offline':
-            textElement.textContent = 'Modo offline';
-            iconElement.setAttribute('data-lucide', 'wifi-off');
-            break;
-        default: // disconnected
-            textElement.textContent = 'Sin conexión a Drive';
-            iconElement.setAttribute('data-lucide', 'cloud-off');
     }
     
     // Reinicializar iconos
@@ -238,74 +253,69 @@ function updateDriveStatus(status) {
     }
 }
 
-async function backupToGoogleDrive() {
-    if (!driveConnected || !gapi.client.drive) {
-        return;
-    }
-    
+async function backupToDevice() {
     try {
-        updateDriveStatus('syncing');
+        updateBackupStatus('saving');
         
         const fechaBackup = obtenerFechaActual();
-        const horaBackup = new Date().toLocaleTimeString();
+        const horaBackup = new Date().toLocaleTimeString().replace(/:/g, '-');
         
-        // Crear contenido de respaldo
-        let backupContent = `RESPALDO INVENTARIO FORESTAL\\n`;
-        backupContent += `Fecha: ${fechaBackup} ${horaBackup}\\n`;
-        backupContent += `=====================================\\n\\n`;
+        // Generar CSV completo
+        let csvContent = 'Lote,Parcela,Fecha,Numero_Arbol,DAP_cm,CAP_cm,Fecha_Backup\n';
         
         Object.entries(inventario).forEach(([nombreLote, datosLote]) => {
-            backupContent += `LOTE: ${nombreLote}\\n`;
-            backupContent += `----------------------------------------\\n`;
-            
             if (datosLote.parcelas) {
                 Object.values(datosLote.parcelas).forEach(parcela => {
-                    backupContent += `Parcela: ${parcela.numero}\\n`;
-                    backupContent += `Fecha: ${parcela.fecha}\\n`;
-                    backupContent += `Árboles: ${parcela.totalArboles}\\n`;
-                    backupContent += `DAP promedio: ${parcela.dapPromedio.toFixed(2)} cm\\n`;
-                    backupContent += `Mediciones:\\n`;
                     parcela.mediciones.forEach(medicion => {
-                        backupContent += `  Árbol ${medicion.numeroArbol}: ${medicion.dap} cm\\n`;
+                        csvContent += `${nombreLote},${parcela.numero},${parcela.fecha},${medicion.numeroArbol},${medicion.dap},${medicion.cap},${fechaBackup}\n`;
                     });
-                    backupContent += `\\n`;
                 });
             }
-            backupContent += `========================================\\n\\n`;
         });
         
-        // Subir archivo a Google Drive
-        const fileName = `Inventario_Forestal_${fechaBackup}_${horaBackup.replace(/:/g, '-')}.txt`;
-        
-        const fileMetadata = {
-            name: fileName,
-            parents: [] // Se guardará en la raíz de Drive
-        };
-        
-        const form = new FormData();
-        form.append('metadata', new Blob([JSON.stringify(fileMetadata)], {type: 'application/json'}));
-        form.append('file', new Blob([backupContent], {type: 'text/plain'}));
-        
-        const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-            method: 'POST',
-            headers: new Headers({
-                'Authorization': `Bearer ${gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().access_token}`
-            }),
-            body: form
-        });
-        
-        if (response.ok) {
-            updateDriveStatus('connected');
-            console.log('Respaldo exitoso a Google Drive:', fileName);
-        } else {
-            throw new Error('Error en la respuesta del servidor');
+        // Guardar usando File System Access API si está disponible
+        if ('showSaveFilePicker' in window) {
+            try {
+                const fileHandle = await window.showSaveFilePicker({
+                    suggestedName: `InventarioForestal_Backup_${fechaBackup}_${horaBackup}.csv`,
+                    types: [{
+                        description: 'Archivos CSV',
+                        accept: { 'text/csv': ['.csv'] }
+                    }]
+                });
+                
+                const writable = await fileHandle.createWritable();
+                await writable.write(csvContent);
+                await writable.close();
+                
+                updateBackupStatus('saved');
+                return;
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    console.log('File System API no disponible, usando descarga');
+                }
+            }
         }
         
+        // Fallback: descarga automática
+        descargarArchivo(csvContent, `InventarioForestal_Backup_${fechaBackup}_${horaBackup}.csv`, 'text/csv');
+        updateBackupStatus('saved');
+        
     } catch (error) {
-        console.error('Error en respaldo a Drive:', error);
-        updateDriveStatus('error');
-        setTimeout(() => updateDriveStatus(driveConnected ? 'connected' : 'disconnected'), 3000);
+        console.error('Error en respaldo:', error);
+        updateBackupStatus('error');
     }
+}
+
+// Funciones de cálculo forestal
+function calcularCAP(dap) {
+    // CAP = ENTERO(DAP * π / 5) * 5
+    return Math.floor((dap * Math.PI) / 5) * 5;
+}
+
+function calcularDensidad(numeroArboles) {
+    // n/ha = número de árboles * 20
+    return numeroArboles * 20;
 }
 
 // Utilidades
@@ -344,7 +354,7 @@ function handleEnterKey(e) {
     }
 }
 
-// Funciones principales
+// Funciones principales de medición
 function agregarMedicion() {
     const numeroArbol = elements.numeroArbolInput.value.trim();
     const dapValue = elements.dapInput.value.trim();
@@ -374,8 +384,15 @@ function agregarMedicion() {
         return;
     }
     
+    // Calcular CAP
+    const cap = calcularCAP(dap);
+    
     // Agregar medición
-    medicionesActuales.push({ numeroArbol: numArbol, dap: dap });
+    medicionesActuales.push({ 
+        numeroArbol: numArbol, 
+        dap: dap,
+        cap: cap
+    });
     medicionesActuales.sort((a, b) => a.numeroArbol - b.numeroArbol);
     
     // Limpiar inputs
@@ -415,6 +432,7 @@ function editarMedicion(numeroArbol) {
     }
     
     medicion.dap = nuevoDap;
+    medicion.cap = calcularCAP(nuevoDap);
     actualizarListaMediciones();
 }
 
@@ -433,22 +451,31 @@ function actualizarListaMediciones() {
         const div = document.createElement('div');
         div.className = 'medicion-card fade-in';
         div.innerHTML = `
-            <span class="texto">Árbol ${medicion.numeroArbol}: ${medicion.dap} cm</span>
-            <div class="botones">
-                <button class="btn-editar" onclick="editarMedicion(${medicion.numeroArbol})" title="Editar">
-                    <i data-lucide="edit-3"></i>
-                </button>
-                <button class="btn-eliminar" onclick="eliminarMedicion(${medicion.numeroArbol})" title="Eliminar">
-                    <i data-lucide="x"></i>
-                </button>
+            <div class="info">
+                <span class="datos">Árbol ${medicion.numeroArbol}: ${medicion.dap} cm</span>
+                <div class="botones">
+                    <button class="btn-editar" onclick="editarMedicion(${medicion.numeroArbol})" title="Editar">
+                        <i data-lucide="edit-3"></i>
+                    </button>
+                    <button class="btn-eliminar" onclick="eliminarMedicion(${medicion.numeroArbol})" title="Eliminar">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="detalles">
+                <span>CAP: ${medicion.cap} cm</span>
             </div>
         `;
         elements.medicionesGrid.appendChild(div);
     });
     
-    // Calcular y mostrar promedio
-    const promedio = medicionesActuales.reduce((sum, m) => sum + m.dap, 0) / medicionesActuales.length;
-    elements.promedioDisplay.textContent = `Promedio: ${promedio.toFixed(2)} cm`;
+    // Calcular estadísticas
+    const daps = medicionesActuales.map(m => m.dap);
+    const promedio = daps.reduce((sum, dap) => sum + dap, 0) / daps.length;
+    const densidad = calcularDensidad(medicionesActuales.length);
+    
+    elements.promedioDisplay.textContent = `DAP promedio: ${promedio.toFixed(2)} cm`;
+    elements.densidadDisplay.textContent = `Densidad: ${densidad} árboles/ha`;
     
     // Reinicializar iconos
     if (window.lucide) {
@@ -486,22 +513,24 @@ function guardarParcela() {
         claveUnica = `${parcelaActual}_${claveUnica}`;
     }
     
-    // Guardar parcela
+    // Guardar parcela con cálculos
     inventario[loteActual].parcelas[claveUnica] = {
         numero: parcelaActual,
         fecha: fechaActual,
         mediciones: [...medicionesActuales],
         totalArboles: medicionesActuales.length,
-        dapPromedio: daps.reduce((a, b) => a + b, 0) / daps.length
+        dapPromedio: daps.reduce((a, b) => a + b, 0) / daps.length,
+        densidadHa: calcularDensidad(medicionesActuales.length)
     };
     
     // Guardar en localStorage
     saveData();
     
-    // Respaldo automático a Google Drive
-    if (driveConnected) {
-        backupToGoogleDrive();
-    }
+    // Respaldo automático
+    backupToDevice();
+    
+    // Actualizar estadísticas globales
+    actualizarEstadisticasGlobales();
     
     // Limpiar estado de edición
     parcelaEditandoKey = null;
@@ -576,7 +605,7 @@ function editarParcelaGuardada(lote, claveCompleta) {
     const parcela = inventario[lote].parcelas[claveCompleta];
     
     // Confirmar edición
-    const confirmar = confirm(`¿Desea editar la parcela ${parcela.numero} del lote ${lote}?\\n\\nLos datos actuales se cargarán para edición.`);
+    const confirmar = confirm(`¿Desea editar la parcela ${parcela.numero} del lote ${lote}?\n\nLos datos actuales se cargarán para edición.`);
     if (!confirmar) return;
     
     // Verificar si hay datos sin guardar
@@ -606,7 +635,7 @@ function editarParcelaGuardada(lote, claveCompleta) {
     // Scroll hacia arriba
     window.scrollTo({ top: 0, behavior: 'smooth' });
     
-    alert(`📝 Parcela ${parcela.numero} cargada para edición.\\n\\nPuede modificar las mediciones y guardar los cambios.`);
+    alert(`📝 Parcela ${parcela.numero} cargada para edición.\n\nPuede modificar las mediciones y guardar los cambios.`);
 }
 
 function editarNumeroParcela() {
@@ -640,45 +669,204 @@ function cerrarModalEdicion() {
     elements.nuevoNumeroParcelaInput.value = '';
 }
 
-// Funciones de exportación
+// Funciones de eliminación
+function confirmarEliminacion(tipo, lote = null, claveCompleta = null) {
+    deleteTarget = { tipo, lote, claveCompleta };
+    
+    let mensaje = '';
+    if (tipo === 'all') {
+        mensaje = '¿Está seguro de que desea eliminar TODOS los datos del inventario?\n\nEsta acción no se puede deshacer.';
+    } else if (tipo === 'lote') {
+        mensaje = `¿Está seguro de que desea eliminar el lote "${lote}" y todas sus parcelas?\n\nEsta acción no se puede deshacer.`;
+    } else if (tipo === 'parcela') {
+        const parcela = inventario[lote].parcelas[claveCompleta];
+        mensaje = `¿Está seguro de que desea eliminar la parcela ${parcela.numero} del lote "${lote}"?\n\nEsta acción no se puede deshacer.`;
+    }
+    
+    elements.deleteMessage.textContent = mensaje;
+    elements.deleteModal.classList.remove('hidden');
+}
+
+function ejecutarEliminacion() {
+    if (!deleteTarget) return;
+    
+    const { tipo, lote, claveCompleta } = deleteTarget;
+    
+    try {
+        if (tipo === 'all') {
+            inventario = {};
+            // Limpiar también la sesión actual
+            loteActual = '';
+            parcelaActual = '';
+            medicionesActuales = [];
+            parcelaEditandoKey = null;
+            elements.loteInput.value = '';
+            elements.parcelaInput.value = '';
+            elements.editParcelaBtn.classList.add('hidden');
+            actualizarSeccionCaptura();
+            actualizarListaMediciones();
+            actualizarBotones();
+            alert('✅ Todos los datos han sido eliminados');
+        } else if (tipo === 'lote') {
+            delete inventario[lote];
+            alert(`✅ Lote "${lote}" eliminado exitosamente`);
+        } else if (tipo === 'parcela') {
+            delete inventario[lote].parcelas[claveCompleta];
+            // Si era la última parcela del lote, eliminar el lote también
+            if (Object.keys(inventario[lote].parcelas).length === 0) {
+                delete inventario[lote];
+            }
+            alert('✅ Parcela eliminada exitosamente');
+        }
+        
+        // Guardar cambios
+        saveData();
+        actualizarVisualizacionDatos();
+        actualizarEstadisticasGlobales();
+        
+        // Respaldo automático después de eliminación
+        if (Object.keys(inventario).length > 0) {
+            backupToDevice();
+        }
+        
+    } catch (error) {
+        console.error('Error al eliminar:', error);
+        alert('❌ Error al eliminar. Intente nuevamente.');
+    }
+    
+    cerrarModalEliminacion();
+}
+
+function cerrarModalEliminacion() {
+    elements.deleteModal.classList.add('hidden');
+    deleteTarget = null;
+}
+
+function exportarInventarioCompleto() {
+    if (Object.keys(inventario).length === 0) {
+        alert('No hay datos para exportar');
+        return;
+    }
+    
+    const incluirEstadisticas = elements.incluirEstadisticas.checked;
+    const incluirFechaExport = elements.incluirFechaExport.checked;
+    const fechaExport = obtenerFechaActual();
+    const horaExport = new Date().toLocaleTimeString();
+    
+    // Headers básicos
+    let headers = ['Lote', 'Parcela', 'Fecha_Medicion', 'Numero_Arbol', 'DAP_cm', 'CAP_cm'];
+    
+    if (incluirEstadisticas) {
+        headers.push('Densidad_ha', 'DAP_Promedio_Parcela', 'Total_Arboles_Parcela');
+    }
+    
+    if (incluirFechaExport) {
+        headers.push('Fecha_Exportacion', 'Hora_Exportacion');
+    }
+    
+    let csvContent = headers.join(',') + '\n';
+    
+    // Datos
+    Object.entries(inventario).forEach(([nombreLote, datosLote]) => {
+        if (datosLote.parcelas) {
+            Object.values(datosLote.parcelas).forEach(parcela => {
+                parcela.mediciones.forEach(medicion => {
+                    let row = [
+                        nombreLote,
+                        parcela.numero,
+                        parcela.fecha,
+                        medicion.numeroArbol,
+                        medicion.dap,
+                        medicion.cap
+                    ];
+                    
+                    if (incluirEstadisticas) {
+                        row.push(
+                            parcela.densidadHa,
+                            parcela.dapPromedio.toFixed(2),
+                            parcela.totalArboles
+                        );
+                    }
+                    
+                    if (incluirFechaExport) {
+                        row.push(fechaExport, horaExport);
+                    }
+                    
+                    csvContent += row.join(',') + '\n';
+                });
+            });
+        }
+    });
+    
+    const stats = calcularEstadisticasGlobales();
+    const fileName = `InventarioForestal_Completo_${stats.totalLotes}L_${stats.totalParcelas}P_${stats.totalArboles}A_${fechaExport}.csv`;
+    
+    descargarArchivo(csvContent, fileName, 'text/csv');
+    alert(`✅ Exportación completada:\n\n📊 ${stats.totalLotes} lotes\n📋 ${stats.totalParcelas} parcelas\n🌲 ${stats.totalArboles} árboles\n\n📁 Archivo: ${fileName}`);
+}
+
+function exportarEstadisticas() {
+    if (Object.keys(inventario).length === 0) {
+        alert('No hay datos para generar estadísticas');
+        return;
+    }
+    
+    const fechaExport = obtenerFechaActual();
+    let csvContent = 'Lote,Parcela,Fecha_Medicion,Total_Arboles,DAP_Promedio,DAP_Minimo,DAP_Maximo,Densidad_ha,CAP_Promedio\n';
+    
+    Object.entries(inventario).forEach(([nombreLote, datosLote]) => {
+        if (datosLote.parcelas) {
+            Object.values(datosLote.parcelas).forEach(parcela => {
+                const daps = parcela.mediciones.map(m => m.dap);
+                const caps = parcela.mediciones.map(m => m.cap);
+                const dapMin = Math.min(...daps);
+                const dapMax = Math.max(...daps);
+                const capPromedio = caps.reduce((a, b) => a + b, 0) / caps.length;
+                
+                csvContent += [
+                    nombreLote,
+                    parcela.numero,
+                    parcela.fecha,
+                    parcela.totalArboles,
+                    parcela.dapPromedio.toFixed(2),
+                    dapMin.toFixed(1),
+                    dapMax.toFixed(1),
+                    parcela.densidadHa,
+                    capPromedio.toFixed(1)
+                ].join(',') + '\n';
+            });
+        }
+    });
+    
+    const stats = calcularEstadisticasGlobales();
+    const fileName = `EstadisticasForestales_${stats.totalLotes}L_${stats.totalParcelas}P_${fechaExport}.csv`;
+    
+    descargarArchivo(csvContent, fileName, 'text/csv');
+    alert(`✅ Estadísticas exportadas:\n\n📊 Resumen por parcela generado\n📁 Archivo: ${fileName}`);
+}
+
+function exportarTodosDatos() {
+    // Función legacy - ahora redirige a la nueva función
+    exportarInventarioCompleto();
+}
+
+// Funciones de exportación por lote
 function exportarLote(nombreLote) {
     const datosLote = inventario[nombreLote];
     if (!datosLote || !datosLote.parcelas) return;
     
-    let csvContent = 'Lote,Parcela,Fecha,Numero_Arbol,DAP_cm\\n';
+    let csvContent = 'Lote,Parcela,Fecha,Numero_Arbol,DAP_cm,CAP_cm,Densidad_ha\n';
     
     Object.values(datosLote.parcelas).forEach(parcela => {
         parcela.mediciones.forEach(medicion => {
-            csvContent += `${nombreLote},${parcela.numero},${parcela.fecha},${medicion.numeroArbol},${medicion.dap}\\n`;
+            csvContent += `${nombreLote},${parcela.numero},${parcela.fecha},${medicion.numeroArbol},${medicion.dap},${medicion.cap},${parcela.densidadHa}\n`;
         });
     });
     
     descargarArchivo(csvContent, `Inventario_${nombreLote}_${obtenerFechaActual()}.csv`, 'text/csv');
 }
 
-function exportarResumen(nombreLote) {
-    const datosLote = inventario[nombreLote];
-    if (!datosLote || !datosLote.parcelas) return;
-    
-    let txtContent = `RESUMEN INVENTARIO FORESTAL\\n`;
-    txtContent += `Lote: ${nombreLote}\\n`;
-    txtContent += `Fecha de exportación: ${obtenerFechaActual()}\\n`;
-    txtContent += `=====================================\\n\\n`;
-    
-    Object.values(datosLote.parcelas).forEach(parcela => {
-        txtContent += `Parcela: ${parcela.numero}\\n`;
-        txtContent += `Fecha medición: ${parcela.fecha}\\n`;
-        txtContent += `Total árboles: ${parcela.totalArboles}\\n`;
-        txtContent += `DAP promedio: ${parcela.dapPromedio.toFixed(2)} cm\\n`;
-        txtContent += `Mediciones:\\n`;
-        parcela.mediciones.forEach(medicion => {
-            txtContent += `  Árbol ${medicion.numeroArbol}: ${medicion.dap} cm\\n`;
-        });
-        txtContent += `-------------------------------------\\n`;
-    });
-    
-    descargarArchivo(txtContent, `Resumen_${nombreLote}_${obtenerFechaActual()}.txt`, 'text/plain');
-}
+// Funciones de respaldo local
 
 function descargarArchivo(contenido, nombreArchivo, tipoMIME) {
     const blob = new Blob([contenido], { type: `${tipoMIME};charset=utf-8;` });
@@ -715,9 +903,9 @@ function actualizarVisualizacionDatos() {
                             <i data-lucide="download"></i>
                             CSV
                         </button>
-                        <button onclick="exportarResumen('${nombreLote}')" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 flex items-center gap-1">
-                            <i data-lucide="file-text"></i>
-                            TXT
+                        <button onclick="confirmarEliminacion('lote', '${nombreLote}')" class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 flex items-center gap-1">
+                            <i data-lucide="trash-2"></i>
+                            Eliminar
                         </button>
                     </div>
                 </div>
@@ -732,11 +920,29 @@ function actualizarVisualizacionDatos() {
                             <button class="btn-edit-parcela" onclick="editarParcelaGuardada('${nombreLote}', '${claveCompleta}')" title="Editar parcela">
                                 <i data-lucide="edit-3"></i>
                             </button>
+                            <button class="btn-delete-parcela" onclick="confirmarEliminacion('parcela', '${nombreLote}', '${claveCompleta}')" title="Eliminar parcela">
+                                <i data-lucide="trash-2"></i>
+                            </button>
                         </div>
-                        <p class="font-medium">Parcela ${parcela.numero}</p>
-                        <p class="text-gray-600">Fecha: ${parcela.fecha}</p>
-                        <p class="text-gray-600">Árboles: ${parcela.totalArboles}</p>
-                        <p class="text-gray-600">DAP promedio: ${parcela.dapPromedio.toFixed(2)} cm</p>
+                        <p class="font-medium mb-2">Parcela ${parcela.numero}</p>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-label">Fecha</div>
+                                <div class="stat-value">${parcela.fecha}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Árboles</div>
+                                <div class="stat-value">${parcela.totalArboles}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">DAP promedio</div>
+                                <div class="stat-value">${parcela.dapPromedio.toFixed(2)} cm</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Densidad</div>
+                                <div class="stat-value">${parcela.densidadHa} /ha</div>
+                            </div>
+                        </div>
                     </div>
                 `;
             });
@@ -787,6 +993,7 @@ function loadData() {
         if (datos) {
             inventario = JSON.parse(datos);
             actualizarVisualizacionDatos();
+            actualizarEstadisticasGlobales();
         }
     } catch (e) {
         console.error('Error cargando datos:', e);
@@ -796,12 +1003,8 @@ function loadData() {
 // Detector de conexión
 window.addEventListener('online', () => {
     console.log('Conexión restaurada');
-    if (driveConnected) {
-        updateDriveStatus('connected');
-    }
 });
 
 window.addEventListener('offline', () => {
     console.log('Sin conexión');
-    updateDriveStatus('offline');
 });
