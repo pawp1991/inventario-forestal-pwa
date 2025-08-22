@@ -462,3 +462,75 @@ function mostrarMensaje(mensaje, tipo) {
         msgDiv.remove();
     }, 3000);
 }
+// ========= CÓDIGO DE DEBUG PARA INSTALACIÓN =========
+// Agregar este código AL FINAL del archivo app.js
+
+// Verificar si PWA es instalable
+window.addEventListener('load', () => {
+    // Mostrar estado de Service Worker
+    if ('serviceWorker' in navigator) {
+        console.log('✅ Service Worker soportado');
+        
+        navigator.serviceWorker.ready.then(() => {
+            console.log('✅ Service Worker activo');
+        });
+    } else {
+        console.log('❌ Service Worker NO soportado');
+    }
+    
+    // Verificar HTTPS
+    if (location.protocol === 'https:' || location.hostname === 'localhost') {
+        console.log('✅ Sitio seguro (HTTPS)');
+    } else {
+        console.log('❌ Sitio NO seguro - PWA requiere HTTPS');
+    }
+    
+    // Verificar manifest
+    const manifestLink = document.querySelector('link[rel="manifest"]');
+    if (manifestLink) {
+        console.log('✅ Manifest vinculado');
+    } else {
+        console.log('❌ Manifest NO encontrado');
+    }
+});
+
+// Forzar mostrar botón de instalación después de 3 segundos
+setTimeout(() => {
+    const btnInstalar = document.getElementById('btnInstalar');
+    if (btnInstalar && btnInstalar.style.display === 'none') {
+        console.log('⚠️ Mostrando botón de instalación manualmente');
+        btnInstalar.style.display = 'block';
+        
+        // Agregar funcionalidad manual si no hay prompt
+        btnInstalar.addEventListener('click', () => {
+            if (!deferredPrompt) {
+                alert('Para instalar la app:\n\n1. Abre el menú del navegador (⋮)\n2. Busca "Agregar a pantalla de inicio"\n3. Confirma la instalación\n\nO en iOS:\n1. Toca el botón compartir\n2. "Agregar a pantalla de inicio"');
+            }
+        });
+    }
+}, 3000);
+
+// Detectar si ya está instalada
+window.addEventListener('appinstalled', () => {
+    console.log('✅ App instalada exitosamente');
+    const btnInstalar = document.getElementById('btnInstalar');
+    if (btnInstalar) {
+        btnInstalar.style.display = 'none';
+    }
+});
+
+// Verificar si está en modo standalone (ya instalada)
+if (window.matchMedia('(display-mode: standalone)').matches) {
+    console.log('✅ App ejecutándose en modo standalone');
+    const btnInstalar = document.getElementById('btnInstalar');
+    if (btnInstalar) {
+        btnInstalar.style.display = 'none';
+    }
+}
+
+// Escuchar errores de instalación
+window.addEventListener('beforeinstallprompt', (e) => {
+    console.log('✅ Evento beforeinstallprompt detectado');
+});
+
+console.log('🔍 Debug de instalación cargado - Revisa la consola para más información');
