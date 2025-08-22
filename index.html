@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2e7d32">
+    <title>Inventario Forestal v4.0</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>Inventario Forestal</h1>
+            <span class="version">v4.0</span>
+        </header>
+
+        <!-- Formulario Principal -->
+        <div class="form-section">
+            <h2>Datos de la Parcela</h2>
+            
+            <div class="form-group">
+                <label for="lote">Nombre del Lote</label>
+                <input type="text" id="lote" placeholder="Ej: Bosque Norte">
+            </div>
+
+            <div class="form-group">
+                <label for="parcela">Número de Parcela</label>
+                <input type="number" id="parcela" placeholder="Ej: 1" min="1">
+            </div>
+
+            <div class="form-group">
+                <label for="fecha">Fecha</label>
+                <input type="date" id="fecha">
+            </div>
+        </div>
+
+        <!-- Sección de Árboles -->
+        <div class="trees-section">
+            <h2>Registro de Árboles</h2>
+            
+            <div class="tree-input-group">
+                <div class="input-row">
+                    <div class="form-group">
+                        <label for="numeroArbol">N° Árbol</label>
+                        <input type="number" id="numeroArbol" placeholder="1" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="dap">DAP (cm)</label>
+                        <input type="number" id="dap" placeholder="25.5" step="0.1" min="0">
+                    </div>
+                </div>
+                <button id="btnAgregarArbol" class="btn btn-primary">
+                    ➕ Agregar Árbol
+                </button>
+            </div>
+
+            <!-- Contador -->
+            <div class="counter">
+                <span>Árboles registrados: <strong id="contadorArboles">0</strong></span>
+            </div>
+
+            <!-- Lista de Árboles -->
+            <div id="listaArboles" class="tree-list"></div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="action-buttons">
+            <button id="btnExportar" class="btn btn-success">
+                📥 Exportar CSV
+            </button>
+            <button id="btnLimpiar" class="btn btn-danger">
+                🗑️ Limpiar Todo
+            </button>
+        </div>
+
+        <!-- Estado de guardado -->
+        <div id="estadoGuardado" class="save-status">
+            Guardado automático activo
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
