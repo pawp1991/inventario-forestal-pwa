@@ -1,12 +1,12 @@
-const CACHE_NAME = 'inventario-forestal-v4.0';
+const CACHE_NAME = 'inventario-forestal-v4.1';
 const urlsToCache = [
-    '/inventario-forestal-pwa/',
-    '/inventario-forestal-pwa/index.html',
-    '/inventario-forestal-pwa/styles.css',
-    '/inventario-forestal-pwa/app.js',
-    '/inventario-forestal-pwa/manifest.json',
-    '/inventario-forestal-pwa/icon-192.png',
-    '/inventario-forestal-pwa/icon-512.png'
+    './',
+    './index.html',
+    './styles.css',
+    './app.js',
+    './manifest.json',
+    './icon-192.png',
+    './icon-512.png'
 ];
 
 // Instalación del Service Worker
@@ -46,6 +46,11 @@ self.addEventListener('activate', event => {
 
 // Interceptar peticiones
 self.addEventListener('fetch', event => {
+    // Ignorar peticiones que no sean GET
+    if (event.request.method !== 'GET') {
+        return;
+    }
+    
     event.respondWith(
         caches.match(event.request)
             .then(response => {
@@ -61,6 +66,11 @@ self.addEventListener('fetch', event => {
                         return response;
                     }
                     
+                    // No cachear peticiones de chrome-extension
+                    if (event.request.url.startsWith('chrome-extension://')) {
+                        return response;
+                    }
+                    
                     // Clonar la respuesta
                     const responseToCache = response.clone();
                     
@@ -72,9 +82,9 @@ self.addEventListener('fetch', event => {
                     
                     return response;
                 }).catch(() => {
-                    // Si falla el fetch (offline), mostrar página offline si existe
+                    // Si falla el fetch (offline), mostrar página principal
                     console.log('Sin conexión, usando caché');
-                    return caches.match('/inventario-forestal-pwa/index.html');
+                    return caches.match('./index.html');
                 });
             })
     );

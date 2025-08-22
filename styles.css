@@ -228,9 +228,75 @@ h2 {
 /* Botones de Acción */
 .action-buttons {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 10px;
     margin-top: 20px;
+}
+
+.save-parcel-section {
+    margin-top: 15px;
+}
+
+.btn-info {
+    background: #2196f3;
+    color: white;
+}
+
+.btn-info:hover {
+    background: #1976d2;
+}
+
+.btn-export-all {
+    background: #ff9800;
+    color: white;
+}
+
+.btn-export-all:hover {
+    background: #f57c00;
+}
+
+.btn-install {
+    background: #9c27b0;
+    color: white;
+    margin: 20px 0;
+}
+
+.btn-install:hover {
+    background: #7b1fa2;
+}
+
+/* Edición de árboles */
+.tree-item.editing {
+    background: #fff3e0;
+    border: 2px solid #ff9800;
+}
+
+.tree-item input {
+    width: 60px;
+    padding: 4px;
+    border: 1px solid #2196f3;
+    border-radius: 4px;
+}
+
+.btn-edit, .btn-save, .btn-cancel {
+    background: transparent;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.3s ease;
+}
+
+.btn-edit {
+    color: #2196f3;
+}
+
+.btn-save {
+    color: #4caf50;
+}
+
+.btn-cancel {
+    color: #ff9800;
 }
 
 /* Estado de Guardado */

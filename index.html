@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#2e7d32">
-    <title>Inventario Forestal v4.0</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Inventario Forestal v4.1</title>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="stylesheet" href="styles.css">
@@ -14,7 +16,7 @@
         <!-- Header -->
         <header>
             <h1>Inventario Forestal</h1>
-            <span class="version">v4.0</span>
+            <span class="version">v4.1</span>
         </header>
 
         <!-- Formulario Principal -->
@@ -37,6 +39,13 @@
             </div>
         </div>
 
+        <!-- Botón Guardar Parcela -->
+        <div class="save-parcel-section">
+            <button id="btnGuardarParcela" class="btn btn-info">
+                💾 Guardar Parcela y Crear Nueva
+            </button>
+        </div>
+
         <!-- Sección de Árboles -->
         <div class="trees-section">
             <h2>Registro de Árboles</h2>
@@ -57,9 +66,10 @@
                 </button>
             </div>
 
-            <!-- Contador -->
+            <!-- Contador y Parcelas Guardadas -->
             <div class="counter">
                 <span>Árboles registrados: <strong id="contadorArboles">0</strong></span>
+                <span id="parcelasGuardadas" style="margin-left: 15px;"></span>
             </div>
 
             <!-- Lista de Árboles -->
@@ -69,12 +79,20 @@
         <!-- Botones de Acción -->
         <div class="action-buttons">
             <button id="btnExportar" class="btn btn-success">
-                📥 Exportar CSV
+                📥 Exportar CSV con CAP
+            </button>
+            <button id="btnExportarTodo" class="btn btn-export-all">
+                📊 Exportar Todas las Parcelas
             </button>
             <button id="btnLimpiar" class="btn btn-danger">
-                🗑️ Limpiar Todo
+                🗑️ Limpiar Parcela Actual
             </button>
         </div>
+
+        <!-- Botón de Instalación -->
+        <button id="btnInstalar" class="btn btn-install" style="display:none;">
+            📱 Instalar Aplicación
+        </button>
 
         <!-- Estado de guardado -->
         <div id="estadoGuardado" class="save-status">

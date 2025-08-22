@@ -1,13 +1,13 @@
 {
   "name": "Inventario Forestal PWA",
   "short_name": "Inventario",
-  "description": "Aplicación para registro de inventario forestal con medición de DAP",
-  "start_url": "/inventario-forestal-pwa/",
+  "description": "Aplicación para registro de inventario forestal con medición de DAP y cálculo de CAP",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2e7d32",
   "orientation": "portrait",
-  "scope": "/inventario-forestal-pwa/",
+  "scope": "./",
   "icons": [
     {
       "src": "icon-192.png",
@@ -31,7 +31,7 @@
       "name": "Nuevo Inventario",
       "short_name": "Nuevo",
       "description": "Iniciar un nuevo inventario",
-      "url": "/inventario-forestal-pwa/",
+      "url": "./index.html",
       "icons": [
         {
           "src": "icon-192.png",
