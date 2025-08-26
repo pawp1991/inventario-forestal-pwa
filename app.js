@@ -534,3 +534,13 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 
 console.log('🔍 Debug de instalación cargado - Revisa la consola para más información');
+// Forzar prompt de instalación después de 5 segundos
+setTimeout(() => {
+    if (!window.matchMedia('(display-mode: standalone)').matches) {
+        console.log('App no instalada, mostrando opciones...');
+        // Mostrar instrucciones personalizadas
+        if (confirm('¿Deseas instalar la aplicación para uso offline? \n\nPresiona OK para ver instrucciones')) {
+            alert('Para instalar:\n1. Abre el menú del navegador (⋮)\n2. Selecciona "Agregar a pantalla de inicio"\n3. Confirma la instalación');
+        }
+    }
+}, 5000);
