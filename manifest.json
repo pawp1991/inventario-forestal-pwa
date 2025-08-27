@@ -35,7 +35,10 @@
       "purpose": "maskable"
     }
   ],
-  "categories": ["productivity", "utilities"],
+  "categories": [
+    "productivity",
+    "utilities"
+  ],
   "lang": "es-ES",
   "dir": "ltr",
   "prefer_related_applications": false,
@@ -54,7 +57,11 @@
       ]
     }
   ],
-  "display_override": ["standalone", "minimal-ui"],
+  "display_override": [
+    "standalone",
+    "minimal-ui",
+    "window-controls-overlay"
+  ],
   "edge_side_panel": {
     "preferred_width": 480
   }
