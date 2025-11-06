@@ -1,95 +1,187 @@
-📲 Inventario Forestal PWA v4.1
-✅ Nuevas Funcionalidades Implementadas
-1. Instalación Mejorada
-✅ Botón de instalación visible cuando está disponible
-✅ Compatibilidad mejorada con GitHub Pages
-✅ Service Worker optimizado para instalación
-✅ Rutas relativas para mejor compatibilidad
-2. Guardar y Cambiar Parcelas
-✅ Botón "💾 Guardar Parcela y Crear Nueva"
-✅ Permite guardar parcela actual y continuar con la siguiente
-✅ Auto-incremento del número de parcela
-✅ Contador de parcelas guardadas visible
-3. Edición de Datos
-✅ Click en ✏️ para editar cualquier árbol
-✅ Actualización de DAP en tiempo real
-✅ CAP se recalcula automáticamente al editar
-✅ Botones guardar ✔️ y cancelar ❌
-4. Cálculo de CAP
-✅ Fórmula implementada: CAP = (ENTERO(DAP*π/5))*5
-✅ CAP visible en cada árbol de la lista
-✅ CAP incluido en exportación CSV
-✅ Recálculo automático al editar
-5. Exportación Mejorada
-✅ Exportar parcela actual con CAP
-✅ Exportar TODAS las parcelas guardadas
-✅ CSV incluye columna CAP_cm
-✅ Nombres de archivo descriptivos
-📱 Cómo Instalar la App
-Opción 1: Botón de Instalación
-Abre la app en Chrome móvil
-Aparecerá un botón morado "📱 Instalar Aplicación"
-Presiona el botón
-Confirma la instalación
-Opción 2: Menú del Navegador
-Abre el menú (⋮) en Chrome
-Busca "Instalar aplicación" o "Agregar a pantalla de inicio"
-Confirma la instalación
-Opción 3: Banner Automático
-Chrome puede mostrar un banner automático
-Presiona "Instalar" cuando aparezca
-🔄 Flujo de Trabajo
-Para una sola parcela:
-Ingresa lote y número de parcela
-Agrega todos los árboles (se auto-incrementa el número)
-Edita cualquier árbol si es necesario (✏️)
-Exporta CSV con CAP
-Para múltiples parcelas:
-Ingresa datos de primera parcela
-Agrega todos los árboles
-Presiona "💾 Guardar Parcela y Crear Nueva"
-Repite para cada parcela
-Al final: "📊 Exportar Todas las Parcelas"
-📊 Estructura del CSV Exportado
-csv
-Lote,Parcela,Fecha,Numero_Arbol,DAP_cm,CAP_cm
-Bosque Norte,1,2025-08-22,1,25.5,80
-Bosque Norte,1,2025-08-22,2,30.2,95
-🛠️ Solución de Problemas
-Si no se instala:
-Verifica estar en HTTPS (GitHub Pages lo proporciona)
-Limpia caché y cookies del sitio
-No uses modo incógnito
-Asegúrate de usar Chrome, Edge o Samsung Internet
-Si no aparece el botón de instalar:
-El botón solo aparece si el navegador soporta PWA
-En iOS Safari: usa "Agregar a pantalla de inicio"
-Puede requerir interactuar con la app primero
-Para forzar actualización:
-Desinstala la app
-Limpia datos del sitio en Chrome
-Vuelve a cargar la página
-Reinstala
-🚀 Actualización de Archivos
-Sube estos archivos actualizados a GitHub:
+# Inventario Forestal PWA - v3.2
 
-index.html (actualizado)
-styles.css (actualizado)
-app.js (completamente nuevo)
-manifest.json (actualizado)
-sw.js (actualizado)
-Los iconos siguen siendo los mismos.
+## 🎉 NUEVA FUNCIONALIDAD: Exportación a Excel (XLSX)
 
-📝 Notas Importantes
-CAP: Se calcula automáticamente con la fórmula (ENTERO(DAP*π/5))*5
-Guardado: Automático en cada acción
-Offline: Funciona 100% sin conexión después de la primera carga
-Parcelas: Se pueden guardar múltiples parcelas antes de exportar
-Edición: Todos los árboles son editables después de agregados
-🎯 Versión 4.1 - Cambios
-✅ Instalación mejorada con botón visible
-✅ Guardar parcelas para trabajar con múltiples
-✅ Edición de árboles ya ingresados
-✅ Cálculo y exportación de CAP
-✅ Exportación de todas las parcelas juntas
-✅ Mejor compatibilidad con GitHub Pages
+La versión 3.2 agrega soporte para exportar datos directamente a formato Excel (.xlsx), además del formato CSV existente.
+
+---
+
+## 📊 Formatos de Exportación Disponibles
+
+### ✅ CSV (valores separados por comas)
+- Compatible con Excel, Google Sheets, R, Python
+- Formato ligero y universal
+- Ideal para análisis estadístico
+
+### ✅ XLSX (Excel nativo)
+- Formato nativo de Microsoft Excel
+- Mejor compatibilidad con Excel
+- Mantiene formato de celdas
+- Columnas con ancho automático
+
+---
+
+## 🔧 Funcionalidades de Exportación
+
+### 1. **Exportar Lote Individual**
+- Botón: "Exportar Lote"
+- Exporta datos del lote actual
+- Opción de elegir formato (CSV o XLSX)
+
+### 2. **Exportación Masiva**
+- Botón: "Exportar Todo" (header superior)
+- Muestra sección con estadísticas globales
+- Dos botones separados:
+  - **"Exportar CSV"** → Genera archivo .csv
+  - **"Exportar XLSX"** → Genera archivo .xlsx
+
+### 3. **Exportar Estadísticas**
+- Genera resumen por parcela
+- Incluye: Total árboles, DAP promedio, Densidad/ha
+- Formato: CSV
+
+---
+
+## 📦 Estructura de Archivos Exportados
+
+Ambos formatos (CSV y XLSX) contienen la misma información:
+
+```
+Lote | Parcela | Fecha_Medicion | Numero_Arbol | DAP_cm | CAP_cm | Total_Arboles | DAP_Promedio | Densidad_ha
+```
+
+### Opciones configurables:
+- ✅ Incluir estadísticas por parcela
+- ✅ Incluir fecha de exportación en nombre del archivo
+
+---
+
+## 🚀 Cómo Actualizar a v3.2
+
+### Opción A: Actualización Automática (Recomendado)
+1. **Exporta tus datos actuales** (por seguridad)
+2. **Sube los nuevos archivos** a GitHub Pages:
+   - `index.html`
+   - `script.js`
+   - `manifest.json`
+   - `sw.js`
+3. **Espera 3-5 minutos** para propagación
+4. **Abre la app en tu móvil**
+5. La app se actualizará automáticamente
+
+### Opción B: Actualización Manual
+1. **Cierra completamente** la app
+2. **Abre en navegador** tu URL de GitHub Pages
+3. **Verifica** que muestre "v3.2" en el header
+4. **Reinstala** la PWA desde el navegador
+5. **Tus datos se mantendrán** (localStorage)
+
+---
+
+## 📱 Uso de la Nueva Funcionalidad
+
+### Exportar un Lote:
+1. Selecciona tu lote activo
+2. Click en "Exportar Lote"
+3. Elige formato:
+   - **Aceptar** = XLSX
+   - **Cancelar** = CSV
+
+### Exportación Masiva:
+1. Click en "Exportar Todo" (header)
+2. Aparece sección azul con estadísticas
+3. Configura opciones (checkboxes)
+4. Click en:
+   - **"Exportar CSV"** para archivo .csv
+   - **"Exportar XLSX"** para archivo .xlsx
+
+---
+
+## 🔍 Ventajas del Formato XLSX
+
+### ✅ Mejor para Excel:
+- Se abre directamente sin conversión
+- Formato de celdas preservado
+- Columnas con ancho ajustado
+
+### ✅ Mejor presentación:
+- Encabezados formateados
+- Números como valores (no texto)
+- Mejor para reportes profesionales
+
+### 📊 Cuándo usar cada formato:
+
+**USA CSV si:**
+- Vas a analizar en R o Python
+- Necesitas formato ligero
+- Vas a importar a bases de datos
+
+**USA XLSX si:**
+- Vas a trabajar en Excel
+- Necesitas formato profesional
+- Vas a compartir con no-técnicos
+- Quieres mejor presentación visual
+
+---
+
+## 🛠️ Requisitos Técnicos
+
+### Librería agregada:
+- **SheetJS (xlsx.js)** v0.20.1
+- Cargada desde CDN
+- Sin dependencias adicionales
+
+### Compatibilidad:
+- ✅ Chrome/Edge (móvil y desktop)
+- ✅ Safari (iOS y macOS)
+- ✅ Firefox
+- ✅ Samsung Internet
+
+---
+
+## 📋 Checklist de Actualización
+
+- [ ] Exportar datos actuales (backup)
+- [ ] Subir nuevos archivos a GitHub Pages
+- [ ] Esperar 3-5 minutos
+- [ ] Verificar versión en navegador
+- [ ] Probar exportación CSV
+- [ ] Probar exportación XLSX
+- [ ] Verificar archivos descargados
+
+---
+
+## ⚠️ Notas Importantes
+
+1. **Los datos existentes se mantienen** durante la actualización
+2. **Las exportaciones se descargan** al dispositivo
+3. **Ambos formatos** contienen los mismos datos
+4. **Los archivos XLSX** son ligeramente más pesados que CSV
+5. **La librería SheetJS** se carga desde CDN (requiere internet la primera vez)
+
+---
+
+## 🎯 Próximas Mejoras Sugeridas
+
+- [ ] Exportación con múltiples hojas (una por lote)
+- [ ] Gráficos integrados en XLSX
+- [ ] Formato con colores y estilos
+- [ ] Importación desde XLSX
+- [ ] Plantillas personalizadas
+
+---
+
+## 📞 Soporte
+
+Si tienes problemas con la actualización:
+1. Exporta tus datos
+2. Borra la app instalada
+3. Limpia cache del navegador
+4. Reinstala desde GitHub Pages
+5. Importa tus datos (si es necesario)
+
+---
+
+**Versión:** 3.2.0  
+**Fecha:** Noviembre 2025  
+**Cambios:** Agregada exportación XLSX con SheetJS

@@ -1,61 +1,27 @@
 {
-  "name": "Inventario Forestal PWA",
+  "name": "Inventario Forestal",
   "short_name": "Inventario",
-  "description": "Aplicación para registro de inventario forestal con medición de DAP y cálculo de CAP",
-  "start_url": "https://pawp1991.github.io/inventario-forestal-pwa/",
+  "description": "Aplicación para medición de DAP en inventarios forestales con exportación CSV y XLSX",
+  "version": "3.2.0",
+  "start_url": ".",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#2e7d32",
+  "background_color": "#10b981",
+  "theme_color": "#10b981",
   "orientation": "portrait",
-  "scope": "https://pawp1991.github.io/inventario-forestal-pwa/",
-  "id": "inventario-forestal-pwa-v4",
   "icons": [
     {
-      "src": "https://pawp1991.github.io/inventario-forestal-pwa/icon-192.png",
+      "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
-      "src": "https://pawp1991.github.io/inventario-forestal-pwa/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "https://pawp1991.github.io/inventario-forestal-pwa/icon-512.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "https://pawp1991.github.io/inventario-forestal-pwa/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ],
   "categories": ["productivity", "utilities"],
-  "lang": "es-ES",
-  "dir": "ltr",
-  "prefer_related_applications": false,
-  "shortcuts": [
-    {
-      "name": "Nuevo Inventario",
-      "short_name": "Nuevo",
-      "description": "Iniciar un nuevo inventario",
-      "url": "https://pawp1991.github.io/inventario-forestal-pwa/index.html",
-      "icons": [
-        {
-          "src": "https://pawp1991.github.io/inventario-forestal-pwa/icon-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        }
-      ]
-    }
-  ],
-  "display_override": ["standalone", "minimal-ui"],
-  "edge_side_panel": {
-    "preferred_width": 480
-  }
+  "screenshots": []
 }
