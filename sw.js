@@ -1,4 +1,4 @@
-const CACHE_NAME = 'inventario-forestal-v3.2';
+const CACHE_NAME = 'inventario-forestal-v3.3';
 const urlsToCache = [
   '.',
   'index.html',

@@ -1,8 +1,8 @@
 {
   "name": "Inventario Forestal",
   "short_name": "Inventario",
-  "description": "Aplicación para medición de DAP en inventarios forestales con exportación CSV y XLSX",
-  "version": "3.2.0",
+  "description": "Aplicación para medición de DAP en inventarios forestales con numeración manual de árboles y exportación CSV/XLSX",
+  "version": "3.3.0",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#10b981",

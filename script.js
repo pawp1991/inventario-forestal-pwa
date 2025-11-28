@@ -28,6 +28,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('numeroParcelaInput').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') iniciarParcela();
     });
+    document.getElementById('numeroArbolInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('dapInput').focus();
+        }
+    });
     document.getElementById('dapInput').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') agregarMedicion();
     });
@@ -93,7 +99,7 @@ function iniciarParcela() {
     document.getElementById('parcelaActualInfo').classList.remove('hidden');
     document.getElementById('panelMediciones').classList.remove('hidden');
     document.getElementById('botonesAccion').classList.remove('hidden');
-    document.getElementById('dapInput').focus();
+    document.getElementById('numeroArbolInput').focus();
     
     actualizarContadorArboles();
     actualizarListaMediciones();
@@ -106,30 +112,64 @@ function agregarMedicion() {
         return;
     }
     
+    const numeroArbolInput = document.getElementById('numeroArbolInput');
     const dapInput = document.getElementById('dapInput');
+    
+    const numeroArbol = parseInt(numeroArbolInput.value);
     const dap = parseFloat(dapInput.value);
     
+    // Validar número de árbol
+    if (!numeroArbol || numeroArbol <= 0) {
+        alert('Por favor ingrese un número de árbol válido');
+        numeroArbolInput.focus();
+        return;
+    }
+    
+    // Validar DAP
     if (!dap || dap <= 0) {
         alert('Por favor ingrese un valor de DAP válido');
+        dapInput.focus();
         return;
     }
     
     const parcela = inventario[loteActual].parcelas[parcelaActual];
-    const numeroArbol = parcela.mediciones.length + 1;
-    const cap = dap * Math.PI;
     
-    parcela.mediciones.push({
-        numeroArbol: numeroArbol,
-        dap: dap.toFixed(1),
-        cap: cap.toFixed(1),
-        timestamp: new Date().toISOString()
-    });
+    // Verificar si el número de árbol ya existe
+    const arbolExistente = parcela.mediciones.find(m => m.numeroArbol === numeroArbol);
+    if (arbolExistente) {
+        const confirmar = confirm(
+            `⚠️ El árbol ${numeroArbol} ya fue medido con DAP ${arbolExistente.dap} cm.\n\n` +
+            `¿Desea reemplazar la medición anterior?`
+        );
+        
+        if (confirmar) {
+            // Reemplazar medición existente
+            arbolExistente.dap = dap.toFixed(1);
+            arbolExistente.cap = (dap * Math.PI).toFixed(1);
+            arbolExistente.timestamp = new Date().toISOString();
+        } else {
+            numeroArbolInput.focus();
+            return;
+        }
+    } else {
+        // Agregar nueva medición
+        const cap = dap * Math.PI;
+        
+        parcela.mediciones.push({
+            numeroArbol: numeroArbol,
+            dap: dap.toFixed(1),
+            cap: cap.toFixed(1),
+            timestamp: new Date().toISOString()
+        });
+    }
     
     // Actualizar estadísticas
     actualizarEstadisticasParcela(parcela);
     
+    // Limpiar campos y volver al número de árbol
+    numeroArbolInput.value = '';
     dapInput.value = '';
-    dapInput.focus();
+    numeroArbolInput.focus();
     
     actualizarContadorArboles();
     actualizarListaMediciones();
@@ -167,7 +207,10 @@ function actualizarListaMediciones() {
         return;
     }
     
-    parcela.mediciones.forEach((medicion, index) => {
+    // Ordenar mediciones por número de árbol para mejor visualización
+    const medicionesOrdenadas = [...parcela.mediciones].sort((a, b) => a.numeroArbol - b.numeroArbol);
+    
+    medicionesOrdenadas.forEach((medicion) => {
         const div = document.createElement('div');
         div.className = 'bg-green-50 p-3 rounded-lg flex justify-between items-center border border-green-200';
         div.innerHTML = `
@@ -176,7 +219,7 @@ function actualizarListaMediciones() {
                 <span class="text-gray-600 ml-2">DAP: ${medicion.dap} cm</span>
                 <span class="text-gray-600 ml-2">CAP: ${medicion.cap} cm</span>
             </div>
-            <button onclick="eliminarMedicion(${index})" class="text-red-600 hover:text-red-800">
+            <button onclick="eliminarMedicion(${medicion.numeroArbol})" class="text-red-600 hover:text-red-800">
                 <i data-lucide="trash-2" class="w-5 h-5"></i>
             </button>
         `;
@@ -186,16 +229,20 @@ function actualizarListaMediciones() {
     lucide.createIcons();
 }
 
-function eliminarMedicion(index) {
-    if (!confirm('¿Está seguro de eliminar esta medición?')) return;
+function eliminarMedicion(numeroArbol) {
+    if (!confirm(`¿Está seguro de eliminar la medición del árbol ${numeroArbol}?`)) return;
     
     const parcela = inventario[loteActual].parcelas[parcelaActual];
-    parcela.mediciones.splice(index, 1);
     
-    // Renumerar árboles
-    parcela.mediciones.forEach((m, i) => {
-        m.numeroArbol = i + 1;
-    });
+    // Encontrar índice de la medición por número de árbol
+    const index = parcela.mediciones.findIndex(m => m.numeroArbol === numeroArbol);
+    
+    if (index === -1) {
+        alert('Error: No se encontró la medición');
+        return;
+    }
+    
+    parcela.mediciones.splice(index, 1);
     
     actualizarEstadisticasParcela(parcela);
     actualizarContadorArboles();
